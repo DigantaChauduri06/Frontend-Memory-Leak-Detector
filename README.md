@@ -36,17 +36,13 @@ Each finding includes **severity** (HIGH / MEDIUM / LOW), **category**, optional
 ### Backend (port 4000)
 
 ```bash
-cd backend
-npm install
-npm run dev
+cd backend && npm install && npm run dev
 ```
 
 ### Frontend (port 5173)
 
 ```bash
-cd frontend
-npm install
-npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173). The UI expects the API at `http://localhost:4000`.
