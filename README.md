@@ -33,13 +33,44 @@ Each finding includes **severity** (HIGH / MEDIUM / LOW), **category**, optional
 
 ## Quick start
 
-### Backend (port 4000)
+### CLI (recommended for quick scans)
+
+```bash
+cd cli && npm install && npm run scan
+```
+
+The CLI will prompt you to enter a project path and choose between scanning the **entire project** or **selecting specific files**. Results are printed with color-coded severity.
+
+You can also pass arguments directly:
+
+```bash
+# scan a specific project
+npm run scan -- /path/to/project
+
+# scan only currently changed files in git (modified + staged + untracked)
+npm run scan -- /path/to/project --changed
+
+# scan only files touched in a specific git commit
+npm run scan -- /path/to/project --commit abc123
+
+# output as JSON (pipe-friendly, good for CI)
+npm run scan -- /path/to/project --json
+
+# combine flags
+npm run scan -- /path/to/project --changed --json
+```
+
+The process exits with code `1` if any HIGH severity issues are found (useful for CI gates).
+
+### Web UI
+
+#### Backend (port 4000)
 
 ```bash
 cd backend && npm install && npm run dev
 ```
 
-### Frontend (port 5173)
+#### Frontend (port 5173)
 
 ```bash
 cd frontend && npm install && npm run dev
@@ -56,6 +87,7 @@ Open [http://localhost:5173](http://localhost:5173). The UI expects the API at `
 
 ## Stack
 
+- **CLI:** Commander, Inquirer, Chalk, Ora, ts-morph
 - **Backend:** Express, TypeScript, ts-morph, CORS  
 - **Frontend:** React 18, Vite, Tailwind CSS, axios  
 

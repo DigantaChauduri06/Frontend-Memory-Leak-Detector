@@ -15,7 +15,7 @@ function findPackageJson(startPath: string): string | null {
   }
 }
 
-function detectFramework(targetPath: string): Framework {
+export function detectFramework(targetPath: string): Framework {
   const pkgPath = findPackageJson(targetPath);
   if (!pkgPath) {
     throw new Error(
@@ -35,16 +35,8 @@ function detectFramework(targetPath: string): Framework {
 }
 
 export class Scanner {
-  scan(targetPath: string): ScanResult {
-    const resolvedPath = path.resolve(targetPath);
-    if (!fs.existsSync(resolvedPath)) {
-      throw new Error(`Path does not exist: ${resolvedPath}`);
-    }
-
-    const framework = detectFramework(resolvedPath);
-    const rules = getRulesForFramework(framework);
-
-    const project = new Project({
+  private createProject(framework: Framework): Project {
+    return new Project({
       skipAddingFilesFromTsConfig: true,
       skipFileDependencyResolution: true,
       compilerOptions: {
@@ -52,13 +44,14 @@ export class Scanner {
         allowJs: framework === "react",
       },
     });
+  }
 
-    if (framework === "react") {
-      project.addSourceFilesAtPaths(path.join(resolvedPath, "**/*.{ts,tsx,jsx}"));
-    } else {
-      project.addSourceFilesAtPaths(path.join(resolvedPath, "**/*.ts"));
-    }
-
+  private analyzeProject(
+    project: Project,
+    resolvedPath: string,
+    framework: Framework
+  ): ScanResult {
+    const rules = getRulesForFramework(framework);
     const issues: Issue[] = [];
 
     for (const sourceFile of project.getSourceFiles()) {
@@ -71,5 +64,42 @@ export class Scanner {
     }
 
     return { framework, issues };
+  }
+
+  scan(targetPath: string): ScanResult {
+    const resolvedPath = path.resolve(targetPath);
+    if (!fs.existsSync(resolvedPath)) {
+      throw new Error(`Path does not exist: ${resolvedPath}`);
+    }
+
+    const framework = detectFramework(resolvedPath);
+    const project = this.createProject(framework);
+
+    if (framework === "react") {
+      project.addSourceFilesAtPaths(path.join(resolvedPath, "**/*.{ts,tsx,jsx}"));
+    } else {
+      project.addSourceFilesAtPaths(path.join(resolvedPath, "**/*.ts"));
+    }
+
+    return this.analyzeProject(project, resolvedPath, framework);
+  }
+
+  scanFiles(targetPath: string, files: string[]): ScanResult {
+    const resolvedPath = path.resolve(targetPath);
+    if (!fs.existsSync(resolvedPath)) {
+      throw new Error(`Path does not exist: ${resolvedPath}`);
+    }
+
+    const framework = detectFramework(resolvedPath);
+    const project = this.createProject(framework);
+
+    for (const file of files) {
+      const absolute = path.resolve(resolvedPath, file);
+      if (fs.existsSync(absolute)) {
+        project.addSourceFileAtPath(absolute);
+      }
+    }
+
+    return this.analyzeProject(project, resolvedPath, framework);
   }
 }
